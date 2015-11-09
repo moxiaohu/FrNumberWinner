@@ -6,10 +6,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -32,6 +34,12 @@ public class SubModeActivity extends Activity {
     @Bind(R.id.number_choice_list)
     RecyclerView recyclerView;
 
+    @Bind(R.id.time_btn)
+    CardView timeBtn;
+
+    @Bind(R.id.date_btn)
+    CardView dateBtn;
+
     public final static String LAUNCHMODE = "MODEL";
     private ModeChoiceRecyclerViewAdapter adapter;
 
@@ -42,19 +50,35 @@ public class SubModeActivity extends Activity {
 
         ButterKnife.bind(this);
 
-//        ModeActivity.PLAY_TYPE type = (ModeActivity.PLAY_TYPE) getIntent().getSerializableExtra(ModeActivity.TYPE);
-//        switch (type){
-//            case NUMBER:
-//                break;
-//
-//            case TELEPHONE_NUMBER:
-//
-//                break;
-//        }
+        ModeActivity.PLAY_TYPE type = (ModeActivity.PLAY_TYPE) getIntent().getSerializableExtra(ModeActivity.TYPE);
+        switch (type) {
+            case NUMBER:
+                recyclerView.setVisibility(View.VISIBLE);
+                recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                adapter = new ModeChoiceRecyclerViewAdapter(this, getConfigLists());
+                recyclerView.setAdapter(adapter);
+                break;
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ModeChoiceRecyclerViewAdapter(this, getConfigLists());
-        recyclerView.setAdapter(adapter);
+            case TIME_OR_DATE:
+                timeBtn.setVisibility(View.VISIBLE);
+                dateBtn.setVisibility(View.VISIBLE);
+                break;
+            default:break;
+        }
+    }
+
+    @OnClick(R.id.time_btn)
+    public void OnClickTime(){
+        Intent intent = new Intent(this, NumberPlayActivity.class);
+        intent.putExtra(ModeActivity.TYPE, ModeActivity.PLAY_TYPE.TIME);
+        startActivity(intent);
+    }
+
+    @OnClick(R.id.date_btn)
+    public void OnClickDate(){
+        Intent intent = new Intent(this, NumberPlayActivity.class);
+        intent.putExtra(ModeActivity.TYPE, ModeActivity.PLAY_TYPE.DATE);
+        startActivity(intent);
     }
 
     @Override
@@ -87,8 +111,9 @@ public class SubModeActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private ArrayList<ConfigSingleItemObject> getConfigLists(){
-        Type listType = new TypeToken<ArrayList<ConfigSingleItemObject>>(){}.getType();
+    private ArrayList<ConfigSingleItemObject> getConfigLists() {
+        Type listType = new TypeToken<ArrayList<ConfigSingleItemObject>>() {
+        }.getType();
         Gson gson = new Gson();
         return gson.fromJson(loadJSONFromAsset(), listType);
     }

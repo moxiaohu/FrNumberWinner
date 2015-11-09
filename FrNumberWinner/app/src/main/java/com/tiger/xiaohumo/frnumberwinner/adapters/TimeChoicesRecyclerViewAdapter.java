@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import com.tiger.xiaohumo.frnumberwinner.R;
 import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
-import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 import com.tiger.xiaohumo.frnumberwinner.util.NumberGenerator;
 
 import java.util.ArrayList;
@@ -21,26 +20,22 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by xiaohumo on 15/7/11.
+ * Created by xiaohumo on 09/11/15.
  */
-public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<NumberChoicesRecyclerViewAdapter.NormalTextViewHolder> {
+public class TimeChoicesRecyclerViewAdapter extends RecyclerView.Adapter<TimeChoicesRecyclerViewAdapter.NormalTextViewHolder> {
     private final LayoutInflater mLayoutInflater;
     private ArrayList<String> list;
     private Context context;
+    private int swapIndex;
     private int rightIndex = 0;
     private int totalIndex = 0;
-    private ChoiceChoosenListener choosenListener;
-    private int swapIndex;
-    private ConfigSingleItemObject mode;
 
-    public NumberChoicesRecyclerViewAdapter(Context context, ArrayList<String> list, ConfigSingleItemObject mode) {
+    private ChoiceChoosenListener choosenListener;
+
+    public TimeChoicesRecyclerViewAdapter(Context context, ArrayList<String> list) {
         mLayoutInflater = LayoutInflater.from(context);
         this.context = context;
         this.list = list;
-        this.mode = mode;
-
-        // swap list(0) with random value list(swapIndex)
-        swapListIndex();
     }
 
     @Override
@@ -54,11 +49,11 @@ public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<Numbe
 
     @Override
     public void onBindViewHolder(final NormalTextViewHolder holder, final int position) {
-        holder.item.setText(list.get(position).toString());
+
+        holder.item.setText(list.get(position));
         holder.choiceLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
+            public void onClick(View v) {
                 final Toast toast;
                 if (list.get(position) == list.get(swapIndex)) {
                     toast = Toast.makeText(context, "恭喜! 答对了", Toast.LENGTH_SHORT);
@@ -66,7 +61,6 @@ public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<Numbe
                 } else {
                     toast = Toast.makeText(context, " 你答错啦，哈哈哈。。。", Toast.LENGTH_SHORT);
                 }
-
                 toast.show();
 
                 Handler handler = new Handler();
@@ -79,9 +73,9 @@ public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<Numbe
 
                 totalIndex++;
 
-                list = NumberGenerator.generateNumberArray(mode.getMin(), mode.getMax());
+                list = NumberGenerator.generateTimeList();
                 if (choosenListener != null) {
-                    choosenListener.OnNumberChoiceChoosen(rightIndex, totalIndex, list.get(0));
+                    choosenListener.OnTimeChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }
                 swapListIndex();
 

@@ -23,7 +23,10 @@ public class ModeActivity extends Activity {
 
     public enum PLAY_TYPE {
         NUMBER,
-        TELEPHONE_NUMBER
+        TELEPHONE_NUMBER,
+        TIME_OR_DATE,
+        TIME,
+        DATE
     }
 
     @Override
@@ -44,6 +47,13 @@ public class ModeActivity extends Activity {
     @OnClick(R.id.tele_input_btn)
     public void OnClickTeleInputBtn() {
         Intent intent = new Intent(this, TeleInputActivity.class);
+        startActivity(intent);
+    }
+
+    @OnClick(R.id.time_input_btn)
+    public void OnClickTimeInputBtn() {
+        Intent intent = new Intent(this, SubModeActivity.class);
+        intent.putExtra(TYPE, PLAY_TYPE.TIME_OR_DATE);
         startActivity(intent);
     }
 

@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -14,8 +13,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tiger.xiaohumo.frnumberwinner.adapters.DateChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.NumberChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.TelePhoneNumberRecycleViewAdapter;
+import com.tiger.xiaohumo.frnumberwinner.adapters.TimeChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
 import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 import com.tiger.xiaohumo.frnumberwinner.util.NumberGenerator;
@@ -33,7 +34,7 @@ import butterknife.OnClick;
 /**
  * Created by xiaohumo on 27/10/15.
  */
-public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitListener, ChoiceChoosenListener{
+public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitListener, ChoiceChoosenListener {
 
     @Bind(R.id.number_choice_list)
     RecyclerView recyclerView;
@@ -53,8 +54,10 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
     private static Random random = new Random();
     private static int target;
 
-    private NumberChoicesRecyclerViewAdapter adapter;
+    private NumberChoicesRecyclerViewAdapter numAdapter;
     private TelePhoneNumberRecycleViewAdapter teleAdapter;
+    private TimeChoicesRecyclerViewAdapter timeAdapter;
+    private DateChoicesRecyclerViewAdapter dateAdapter;
     private int MY_DATA_CHECK_CODE = 0;
     private TextToSpeech myTTS;
     private static int index = 0;
@@ -64,16 +67,17 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
     private ConfigSingleItemObject modeObject;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fr_number_test);
 
         ButterKnife.bind(this);
-        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER){
+        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER ||
+                getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TIME ||
+                getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.DATE) {
             totalTime = 60;
-        }else {
+        } else {
             modeObject = getIntent().getExtras().getParcelable(SubModeActivity.LAUNCHMODE);
 
             totalTime = modeObject.getTime();
@@ -89,7 +93,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         btnStart.setVisibility(View.INVISIBLE);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER){
+        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER) {
 
             ArrayList<ArrayList<String>> lists = NumberGenerator.generateTelePhoneArray();
             speakTelePhoneNumber(lists.get(0));
@@ -98,14 +102,27 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
             teleAdapter.setChoosenListener(this);
             recyclerView.setAdapter(teleAdapter);
 
-        }else {
-            ArrayList<Integer> integers = NumberGenerator.generateNumberArray(modeObject.getMin(), modeObject.getMax());
+        } else if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TIME) {
 
-            speakNumber(String.valueOf(integers.get(0)));
-            adapter = new NumberChoicesRecyclerViewAdapter(this, integers, modeObject);
-            adapter.setChoosenListener(this);
-            recyclerView.setAdapter(adapter);
+            ArrayList<String> timeList = NumberGenerator.generateTimeList();
+            speakNumber(timeList.get(0));
+            timeAdapter = new TimeChoicesRecyclerViewAdapter(this, timeList);
+            timeAdapter.setChoosenListener(this);
+            recyclerView.setAdapter(timeAdapter);
 
+        } else if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.DATE) {
+            ArrayList<String> timeList = NumberGenerator.generateDateList();
+            speakNumber(timeList.get(0));
+            dateAdapter = new DateChoicesRecyclerViewAdapter(this, timeList);
+            dateAdapter.setChoosenListener(this);
+            recyclerView.setAdapter(dateAdapter);
+        } else {
+            ArrayList<String> integers = NumberGenerator.generateNumberArray(modeObject.getMin(), modeObject.getMax());
+
+            speakNumber(integers.get(0));
+            numAdapter = new NumberChoicesRecyclerViewAdapter(this, integers, modeObject);
+            numAdapter.setChoosenListener(this);
+            recyclerView.setAdapter(numAdapter);
         }
 
         CountDownTask task = new CountDownTask(totalTime);
@@ -115,9 +132,9 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
-            if(myTTS.isLanguageAvailable(Locale.FRENCH)==TextToSpeech.LANG_AVAILABLE)
+            if (myTTS.isLanguageAvailable(Locale.FRENCH) == TextToSpeech.LANG_AVAILABLE)
                 myTTS.setLanguage(Locale.FRENCH);
-        }else if (status == TextToSpeech.ERROR) {
+        } else if (status == TextToSpeech.ERROR) {
             Toast.makeText(this, "Sorry! Text To Speech failed...", Toast.LENGTH_SHORT).show();
         }
     }
@@ -126,8 +143,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         if (requestCode == MY_DATA_CHECK_CODE) {
             if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
                 myTTS = new TextToSpeech(this, this);
-            }
-            else {
+            } else {
                 Intent installTTSIntent = new Intent();
                 installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
                 startActivity(installTTSIntent);
@@ -140,12 +156,12 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
     }
 
     @Override
-    public void OnNumberChoiceChoosen(int rightIndex, int total, int target) {
+    public void OnNumberChoiceChoosen(int rightIndex, int total, String target) {
         questionNumber.setText(rightIndex + "/" + (total));
         questionIndex = index;
         totalRightAnswers = rightIndex;
         totalQuestions = total;
-        speakNumber(String.valueOf(target));
+        speakNumber(target);
     }
 
     @Override
@@ -158,10 +174,20 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         speakTelePhoneNumber(teleNumber);
     }
 
-    private void speakTelePhoneNumber(ArrayList<String> teleNumber){
+    @Override
+    public void OnTimeChoiceChoosen(int rightIndex, int totalIndex, String teleNumber) {
+        questionNumber.setText(rightIndex + "/" + (totalIndex));
+        questionIndex = index;
+        totalRightAnswers = rightIndex;
+        totalQuestions = totalIndex;
+        myTTS.stop();
+        speakNumber(teleNumber);
+    }
+
+    private void speakTelePhoneNumber(ArrayList<String> teleNumber) {
 
         for (int i = 0; i < teleNumber.size(); i++) {
-                speakNumber(teleNumber.get(i));
+            speakNumber(teleNumber.get(i));
         }
     }
 
@@ -171,30 +197,30 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         int credit = totalRightAnswers - wrong;
 
         String comment = "";
-        if (credit > 12 ){
+        if (credit > 12) {
             comment = "超神了, 收下我的膝盖";
-        }else if (credit <= 12 && credit > 9){
+        } else if (credit <= 12 && credit > 9) {
             comment = "屌屌的";
-        }else if (credit <= 9 && credit > 5){
+        } else if (credit <= 9 && credit > 5) {
             comment = "加油阿亲!";
-        }else if(credit <= 5 && credit > 2){
+        } else if (credit <= 5 && credit > 2) {
             comment = "呵呵, 一般般";
-        }else if (credit <= 2 && credit >=0){
+        } else if (credit <= 2 && credit >= 0) {
             comment = "大哥/大姐，你睡着了么...";
-        }else if (credit < 0){
+        } else if (credit < 0) {
             comment = "你就是个逗比";
         }
         new AlertDialog.Builder(this).setTitle("结果").setMessage("答对" + totalRightAnswers +
-                                                                "\n 答错 " + wrong +
-                                                                " \n 用时" + totalTime + "秒" +
-                                                                "\n 总分 " + credit +
-                                                                "\n" + comment).
-        setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                finish();
-            }
-        }).show();
+                "\n 答错 " + wrong +
+                " \n 用时" + totalTime + "秒" +
+                "\n 总分 " + credit +
+                "\n" + comment).
+                setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                }).show();
     }
 
     @Override
@@ -206,9 +232,10 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         finish();
     }
 
-    class CountDownTask extends TimerTask{
+    class CountDownTask extends TimerTask {
         private int totalSeconds;
-        public CountDownTask(int totalTime){
+
+        public CountDownTask(int totalTime) {
             totalSeconds = totalTime;
         }
 
@@ -219,8 +246,8 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
                 public void run() {
 
                     totalSeconds--;
-                    timerTxtV.setText(""+totalSeconds);
-                    if(totalSeconds < 0) {
+                    timerTxtV.setText("" + totalSeconds);
+                    if (totalSeconds < 0) {
                         timer.cancel();
                         Toast.makeText(getApplicationContext(), "Game Over", Toast.LENGTH_SHORT).show();
                         showResult();

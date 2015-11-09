@@ -32,8 +32,6 @@ public class TelePhoneNumberRecycleViewAdapter extends RecyclerView.Adapter<Tele
 
     private ChoiceChoosenListener choosenListener;
 
-
-
     public TelePhoneNumberRecycleViewAdapter(Context context, ArrayList<ArrayList<String>> list) {
         mLayoutInflater = LayoutInflater.from(context);
         this.context = context;
