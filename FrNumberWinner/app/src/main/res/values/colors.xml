@@ -4,5 +4,5 @@
     <color name="primary_dark">#7B1FA2</color>
     <color name="accent">#7C4DFF</color>
     <color name="text">#000000</color>
-    <color name="window_background">#ECCEF5</color>
+    <color name="window_background">#FFFFFF</color>
 </resources>

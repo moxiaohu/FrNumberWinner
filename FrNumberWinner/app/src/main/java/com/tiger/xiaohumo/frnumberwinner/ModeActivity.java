@@ -1,73 +1,63 @@
 package com.tiger.xiaohumo.frnumberwinner;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.widget.Button;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.Toast;
 
-import java.io.Serializable;
+import java.util.HashMap;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 /**
  * Created by xiaohumo on 29/10/15.
  */
-public class ModeActivity extends Activity {
+public class ModeActivity extends Fragment {
 
-    public final static String TYPE = "TYPE";
-
-    public enum PLAY_TYPE {
-        NUMBER,
-        TELEPHONE_NUMBER,
-        TIME_OR_DATE,
-        TIME,
-        DATE
-    }
+    public static final int[] modeList = new int[]{R.drawable.number, R.drawable.time, R.drawable.tele, R.drawable.mix};
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_type);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        final View rootView = inflater.inflate(R.layout.activity_type, container, false);
+        ButterKnife.bind(rootView, getActivity());
 
-        ButterKnife.bind(this);
-    }
+        GridView gridView = (GridView) rootView.findViewById(R.id.gridview_mode);
+        gridView.setAdapter(new GridAdapter(getActivity()));
 
-    @OnClick(R.id.number_type_btn)
-    public void OnClickNumBtn() {
-        Intent intent = new Intent(this, SubModeActivity.class);
-        intent.putExtra(TYPE, PLAY_TYPE.NUMBER);
-        startActivity(intent);
-    }
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
 
-    @OnClick(R.id.tele_input_btn)
-    public void OnClickTeleInputBtn() {
-        Intent intent = new Intent(this, TeleInputActivity.class);
-        startActivity(intent);
-    }
-
-    @OnClick(R.id.time_input_btn)
-    public void OnClickTimeInputBtn() {
-        Intent intent = new Intent(this, SubModeActivity.class);
-        intent.putExtra(TYPE, PLAY_TYPE.TIME_OR_DATE);
-        startActivity(intent);
-    }
-
-    @OnClick(R.id.tele_btn)
-    public void OnClickTeleBtn() {
-
-        new AlertDialog.Builder(this).setTitle("游戏规则").setMessage("时间为六十秒!你将会听到的是法国电话号码，开始吧亲!").
-                setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(ModeActivity.this, NumberPlayActivity.class);
-                        intent.putExtra(TYPE, PLAY_TYPE.TELEPHONE_NUMBER);
-                        startActivity(intent);
-                    }
-                }).show();
+                Fragment submode = null;
+                switch (position) {
+                    case 0:
+                        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.NUMBER;
+                        submode = new SubModeActivity();
+                        break;
+                    case 1:
+                        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.TIME;
+                        submode = new SubModeActivity();
+                        break;
+                    case 2:
+                        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.TELEPHONE_NUMBER;
+                        submode = new NumberPlayFragment();
+                        break;
+                    case 3:
+                        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.MIX;
+                        submode = new SubModeActivity();
+                        break;
+                    default:
+                        break;
+                }
+                ((MainActivity) getActivity()).setFragment(submode);
+            }
+        });
+        return rootView;
     }
 }
+

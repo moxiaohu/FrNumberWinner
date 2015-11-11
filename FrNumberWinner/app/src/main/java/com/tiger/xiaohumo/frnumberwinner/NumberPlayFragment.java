@@ -6,9 +6,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +25,7 @@ import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 import com.tiger.xiaohumo.frnumberwinner.util.NumberGenerator;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Timer;
@@ -34,7 +38,7 @@ import butterknife.OnClick;
 /**
  * Created by xiaohumo on 27/10/15.
  */
-public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitListener, ChoiceChoosenListener {
+public class NumberPlayFragment extends Fragment {
 
     @Bind(R.id.number_choice_list)
     RecyclerView recyclerView;
@@ -59,7 +63,6 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
     private TimeChoicesRecyclerViewAdapter timeAdapter;
     private DateChoicesRecyclerViewAdapter dateAdapter;
     private int MY_DATA_CHECK_CODE = 0;
-    private TextToSpeech myTTS;
     private static int index = 0;
     Timer timer = new Timer();
     private int totalQuestions;
@@ -68,60 +71,62 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fr_number_test);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        final View rootView = inflater.inflate(R.layout.activity_fr_number_test, container, false);
 
-        ButterKnife.bind(this);
-        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER ||
-                getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TIME ||
-                getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.DATE) {
+
+        ButterKnife.bind(this, rootView);
+        if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TELEPHONE_NUMBER ||
+                FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TIME ||
+                FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.DATE||
+                FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.MIX) {
             totalTime = 60;
         } else {
-            modeObject = getIntent().getExtras().getParcelable(SubModeActivity.LAUNCHMODE);
-
-            totalTime = modeObject.getTime();
+            totalTime = FrWinnerApplication.totalTime;
         }
 
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         startActivityForResult(checkTTSIntent, MY_DATA_CHECK_CODE);
+        return rootView;
     }
 
     @OnClick(R.id.start_btn)
     public void OnClickStart() {
         btnStart.setVisibility(View.INVISIBLE);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TELEPHONE_NUMBER) {
+        if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TELEPHONE_NUMBER) {
 
             ArrayList<ArrayList<String>> lists = NumberGenerator.generateTelePhoneArray();
             speakTelePhoneNumber(lists.get(0));
 
-            teleAdapter = new TelePhoneNumberRecycleViewAdapter(this, lists);
-            teleAdapter.setChoosenListener(this);
+            teleAdapter = new TelePhoneNumberRecycleViewAdapter(getActivity(), lists);
+            teleAdapter.setChoosenListener(new OnChooseModeListener() {
+            });
             recyclerView.setAdapter(teleAdapter);
 
-        } else if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.TIME) {
+        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TIME) {
 
             ArrayList<String> timeList = NumberGenerator.generateTimeList();
             speakNumber(timeList.get(0));
-            timeAdapter = new TimeChoicesRecyclerViewAdapter(this, timeList);
-            timeAdapter.setChoosenListener(this);
+            timeAdapter = new TimeChoicesRecyclerViewAdapter(getActivity(), timeList);
+            timeAdapter.setChoosenListener(new OnChooseModeListener());
             recyclerView.setAdapter(timeAdapter);
 
-        } else if (getIntent().getSerializableExtra(ModeActivity.TYPE) == ModeActivity.PLAY_TYPE.DATE) {
+        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.DATE) {
             ArrayList<String> timeList = NumberGenerator.generateDateList();
             speakNumber(timeList.get(0));
-            dateAdapter = new DateChoicesRecyclerViewAdapter(this, timeList);
-            dateAdapter.setChoosenListener(this);
+            dateAdapter = new DateChoicesRecyclerViewAdapter(getActivity(), timeList);
+            dateAdapter.setChoosenListener(new OnChooseModeListener());
             recyclerView.setAdapter(dateAdapter);
         } else {
-            ArrayList<String> integers = NumberGenerator.generateNumberArray(modeObject.getMin(), modeObject.getMax());
+            ArrayList<String> integers = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
 
             speakNumber(integers.get(0));
-            numAdapter = new NumberChoicesRecyclerViewAdapter(this, integers, modeObject);
-            numAdapter.setChoosenListener(this);
+            numAdapter = new NumberChoicesRecyclerViewAdapter(getActivity(), integers, modeObject);
+            numAdapter.setChoosenListener(new OnChooseModeListener());
             recyclerView.setAdapter(numAdapter);
         }
 
@@ -129,60 +134,10 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         timer.schedule(task, 1000, 1000);       // timeTask
     }
 
-    @Override
-    public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS) {
-            if (myTTS.isLanguageAvailable(Locale.FRENCH) == TextToSpeech.LANG_AVAILABLE)
-                myTTS.setLanguage(Locale.FRENCH);
-        } else if (status == TextToSpeech.ERROR) {
-            Toast.makeText(this, "Sorry! Text To Speech failed...", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == MY_DATA_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                myTTS = new TextToSpeech(this, this);
-            } else {
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            }
-        }
-    }
-
     private void speakNumber(String speech) {
-        myTTS.speak(speech, TextToSpeech.QUEUE_ADD, null);
+        MainActivity.myTTS.speak(speech, TextToSpeech.QUEUE_ADD, null);
     }
 
-    @Override
-    public void OnNumberChoiceChoosen(int rightIndex, int total, String target) {
-        questionNumber.setText(rightIndex + "/" + (total));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = total;
-        speakNumber(target);
-    }
-
-    @Override
-    public void OnTelephoneChoosen(int rightIndex, int totalIndex, ArrayList<String> teleNumber) {
-        questionNumber.setText(rightIndex + "/" + (totalIndex));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = totalIndex;
-        myTTS.stop();
-        speakTelePhoneNumber(teleNumber);
-    }
-
-    @Override
-    public void OnTimeChoiceChoosen(int rightIndex, int totalIndex, String teleNumber) {
-        questionNumber.setText(rightIndex + "/" + (totalIndex));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = totalIndex;
-        myTTS.stop();
-        speakNumber(teleNumber);
-    }
 
     private void speakTelePhoneNumber(ArrayList<String> teleNumber) {
 
@@ -210,7 +165,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
         } else if (credit < 0) {
             comment = "你就是个逗比";
         }
-        new AlertDialog.Builder(this).setTitle("结果").setMessage("答对" + totalRightAnswers +
+        new AlertDialog.Builder(getActivity()).setTitle("结果").setMessage("答对" + totalRightAnswers +
                 "\n 答错 " + wrong +
                 " \n 用时" + totalTime + "秒" +
                 "\n 总分 " + credit +
@@ -218,7 +173,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
                 setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        finish();
+                        getActivity().finish();
                     }
                 }).show();
     }
@@ -229,7 +184,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
 
         timer.cancel();
         timer.purge();
-        finish();
+        getActivity().finish();
     }
 
     class CountDownTask extends TimerTask {
@@ -241,7 +196,7 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
 
         @Override
         public void run() {
-            runOnUiThread(new Runnable() {      // UI thread
+            getActivity().runOnUiThread(new Runnable() {      // UI thread
                 @Override
                 public void run() {
 
@@ -249,13 +204,46 @@ public class NumberPlayActivity extends Activity implements TextToSpeech.OnInitL
                     timerTxtV.setText("" + totalSeconds);
                     if (totalSeconds < 0) {
                         timer.cancel();
-                        Toast.makeText(getApplicationContext(), "Game Over", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Game Over", Toast.LENGTH_SHORT).show();
                         showResult();
                     }
                 }
             });
         }
     }
+
+    private class OnChooseModeListener implements ChoiceChoosenListener{
+
+        @Override
+        public void OnNumberChoiceChoosen(int rightIndex, int total, String target) {
+        questionNumber.setText(rightIndex + "/" + (total));
+        questionIndex = index;
+        totalRightAnswers = rightIndex;
+        totalQuestions = total;
+        speakNumber(target);
+        }
+
+        @Override
+        public void OnTelephoneChoosen(int rightIndex, int totalIndex, ArrayList<String> teleNumber) {
+        questionNumber.setText(rightIndex + "/" + (totalIndex));
+        questionIndex = index;
+        totalRightAnswers = rightIndex;
+        totalQuestions = totalIndex;
+        MainActivity.myTTS.stop();
+        speakTelePhoneNumber(teleNumber);
+        }
+
+        @Override
+        public void OnTimeChoiceChoosen(int rightIndex, int totalIndex, String teleNumber) {
+        questionNumber.setText(rightIndex + "/" + (totalIndex));
+        questionIndex = index;
+        totalRightAnswers = rightIndex;
+        totalQuestions = totalIndex;
+        MainActivity.myTTS.stop();
+        speakNumber(teleNumber);
+        }
+    }
+
 }
 
 

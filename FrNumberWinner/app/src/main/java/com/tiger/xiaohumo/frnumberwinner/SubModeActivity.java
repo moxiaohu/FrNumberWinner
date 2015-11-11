@@ -1,22 +1,17 @@
 package com.tiger.xiaohumo.frnumberwinner;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.tiger.xiaohumo.frnumberwinner.adapters.ModeChoiceRecyclerViewAdapter;
-import com.tiger.xiaohumo.frnumberwinner.adapters.NumberChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 
 import java.io.IOException;
@@ -29,7 +24,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class SubModeActivity extends Activity {
+public class SubModeActivity extends Fragment {
 
     @Bind(R.id.number_choice_list)
     RecyclerView recyclerView;
@@ -40,76 +35,48 @@ public class SubModeActivity extends Activity {
     @Bind(R.id.date_btn)
     CardView dateBtn;
 
-    public final static String LAUNCHMODE = "MODEL";
     private ModeChoiceRecyclerViewAdapter adapter;
+    private NumberPlayFragment playFragment;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        final View rootView = inflater.inflate(R.layout.activity_submode, container, false);
+        
+        ButterKnife.bind(this, rootView);
 
-        ButterKnife.bind(this);
-
-        ModeActivity.PLAY_TYPE type = (ModeActivity.PLAY_TYPE) getIntent().getSerializableExtra(ModeActivity.TYPE);
+        FrWinnerApplication.PLAY_TYPE type = FrWinnerApplication.currentType;
         switch (type) {
             case NUMBER:
                 recyclerView.setVisibility(View.VISIBLE);
-                recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                adapter = new ModeChoiceRecyclerViewAdapter(this, getConfigLists());
+                recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                adapter = new ModeChoiceRecyclerViewAdapter(getActivity(), getConfigLists());
                 recyclerView.setAdapter(adapter);
                 break;
 
-            case TIME_OR_DATE:
+            case TIME:
                 timeBtn.setVisibility(View.VISIBLE);
                 dateBtn.setVisibility(View.VISIBLE);
                 break;
             default:break;
         }
+        return rootView;
     }
 
     @OnClick(R.id.time_btn)
     public void OnClickTime(){
-        Intent intent = new Intent(this, NumberPlayActivity.class);
-        intent.putExtra(ModeActivity.TYPE, ModeActivity.PLAY_TYPE.TIME);
-        startActivity(intent);
+        playFragment = new NumberPlayFragment();
+        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.TIME;
+        ((MainActivity) getActivity()).setFragment(playFragment);
     }
 
     @OnClick(R.id.date_btn)
     public void OnClickDate(){
-        Intent intent = new Intent(this, NumberPlayActivity.class);
-        intent.putExtra(ModeActivity.TYPE, ModeActivity.PLAY_TYPE.DATE);
-        startActivity(intent);
+        playFragment = new NumberPlayFragment();
+        FrWinnerApplication.currentType = FrWinnerApplication.PLAY_TYPE.DATE;
+        ((MainActivity) getActivity()).setFragment(playFragment);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-
-            new AlertDialog.Builder(this).setTitle("游戏规则").setMessage("游戏规则非常简单，选择模式，点击开始，根据听到的数字选择答案，练习法语数字听力啦啦啦!").
-                    setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    }).show();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     private ArrayList<ConfigSingleItemObject> getConfigLists() {
         Type listType = new TypeToken<ArrayList<ConfigSingleItemObject>>() {
@@ -122,7 +89,7 @@ public class SubModeActivity extends Activity {
         String json = null;
         try {
 
-            InputStream is = getAssets().open("config.json");
+            InputStream is = getActivity().getAssets().open("config.json");
 
             int size = is.available();
 

@@ -1,5 +1,6 @@
 package com.tiger.xiaohumo.frnumberwinner.adapters;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.CardView;
@@ -9,8 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.tiger.xiaohumo.frnumberwinner.FrWinnerApplication;
+import com.tiger.xiaohumo.frnumberwinner.MainActivity;
 import com.tiger.xiaohumo.frnumberwinner.SubModeActivity;
-import com.tiger.xiaohumo.frnumberwinner.NumberPlayActivity;
+import com.tiger.xiaohumo.frnumberwinner.NumberPlayFragment;
 import com.tiger.xiaohumo.frnumberwinner.R;
 import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 
@@ -25,9 +28,9 @@ import butterknife.ButterKnife;
 public class ModeChoiceRecyclerViewAdapter extends RecyclerView.Adapter<ModeChoiceRecyclerViewAdapter.NormalTextViewHolder> {
     private final LayoutInflater mLayoutInflater;
     private ArrayList<ConfigSingleItemObject> list;
-    private Context context;
+    private Activity context;
 
-    public ModeChoiceRecyclerViewAdapter(Context context, ArrayList<ConfigSingleItemObject> list) {
+    public ModeChoiceRecyclerViewAdapter(Activity context, ArrayList<ConfigSingleItemObject> list) {
         mLayoutInflater = LayoutInflater.from(context);
         this.context = context;
         this.list = list;
@@ -41,14 +44,17 @@ public class ModeChoiceRecyclerViewAdapter extends RecyclerView.Adapter<ModeChoi
     @Override
     public void onBindViewHolder(final NormalTextViewHolder holder, final int position) {
 
-        ConfigSingleItemObject item = list.get(position);
+        final ConfigSingleItemObject item = list.get(position);
         holder.item.setText(item.getTime() + " 秒" + "\n范围从" + item.getMin() + " 到" + item.getMax());
         holder.choiceLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, NumberPlayActivity.class);
-                intent.putExtra(SubModeActivity.LAUNCHMODE, list.get(position));
-                context.startActivity(intent);
+
+                NumberPlayFragment playFragment = new NumberPlayFragment();
+                FrWinnerApplication.number_mode_max = item.getMax();
+                FrWinnerApplication.number_mode_min = item.getMin();
+                FrWinnerApplication.totalTime = item.getTime();
+                        ((MainActivity) context).setFragment(playFragment);
             }
         });
     }

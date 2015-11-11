@@ -35,20 +35,26 @@ public class NumberGenerator {
     // this function generates choices from min to max, the right choice is called target and put in the first place of the array
     public static ArrayList<String> generateNumberArray(int min, int max) {
         int[] ran = new int[]{-20, -10, 10, 20};
-        ArrayList<String> integers;
-        HashSet<String> set = new HashSet<>();
+        ArrayList<Integer> integerArrayList;
+        HashSet<Integer> set = new HashSet<>();
 
         int diff = min / 5;
 
         int target = randInt(min + diff, max - diff);
-        set.add(String.valueOf(target));
+        set.add(target);
         while (set.size() != 4) {
             int badChoice = target + NumberGenerator.randInt(-diff, diff);
-            set.add(String.valueOf(badChoice));
+            set.add(badChoice);
         }
         set.remove(target);
-        integers = new ArrayList<>(set);
-        integers.add(0, String.valueOf(target));
+        integerArrayList = new ArrayList<>(set);
+
+        integerArrayList.add(0, target);
+
+        ArrayList<String> integers = new ArrayList<>();
+        for (Integer myInt : integerArrayList) {
+            integers.add(String.valueOf(myInt));
+        }
 
         //add a number which has the same last number as target
         while (true) {
@@ -56,7 +62,7 @@ public class NumberGenerator {
             int subIndex = NumberGenerator.randInt(0, 3);
             int badChoice = target + ran[subIndex];
 
-            if (!set.contains(badChoice) && badChoice >= min && badChoice <= max) {
+            if (!set.contains(badChoice) && target!= badChoice && badChoice >= min && badChoice <= max) {
                 integers.add(insertPos, String.valueOf(badChoice));
                 break;
             }

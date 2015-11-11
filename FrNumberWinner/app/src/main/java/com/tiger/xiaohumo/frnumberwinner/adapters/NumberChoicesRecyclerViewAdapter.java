@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tiger.xiaohumo.frnumberwinner.FrWinnerApplication;
 import com.tiger.xiaohumo.frnumberwinner.R;
 import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
 import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
@@ -79,7 +80,7 @@ public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<Numbe
 
                 totalIndex++;
 
-                list = NumberGenerator.generateNumberArray(mode.getMin(), mode.getMax());
+                list = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
                 if (choosenListener != null) {
                     choosenListener.OnNumberChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }

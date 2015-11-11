@@ -9,6 +9,22 @@ import com.tiger.xiaohumo.frnumberwinner.util.FontsOverride;
  */
 public class FrWinnerApplication extends Application {
 
+    public final static String TYPE = "TYPE";
+
+    public enum PLAY_TYPE {
+        NUMBER,
+        TELEPHONE_NUMBER,
+        MIX,
+        TIME,
+        DATE
+    }
+
+    public static int number_mode_max;
+    public static int number_mode_min;
+    public static int totalTime;
+
+    public static PLAY_TYPE currentType;
+
     @Override
     public void onCreate() {
         super.onCreate();

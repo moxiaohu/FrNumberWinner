@@ -12,9 +12,8 @@
             android:name=".SubModeActivity"
             android:label="@string/app_name" >
         </activity>
-        <activity android:name=".NumberPlayActivity"/>
         <activity android:name=".TeleInputActivity"/>
-        <activity android:name=".ModeActivity">
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
