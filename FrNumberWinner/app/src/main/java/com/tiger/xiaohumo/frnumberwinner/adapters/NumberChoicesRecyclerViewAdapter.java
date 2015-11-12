@@ -82,7 +82,7 @@ public class NumberChoicesRecyclerViewAdapter extends RecyclerView.Adapter<Numbe
 
                 list = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
                 if (choosenListener != null) {
-                    choosenListener.OnNumberChoiceChoosen(rightIndex, totalIndex, list.get(0));
+//                    choosenListener.OnNumberChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }
                 swapListIndex();
 

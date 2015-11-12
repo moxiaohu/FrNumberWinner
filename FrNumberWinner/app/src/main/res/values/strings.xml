@@ -9,4 +9,5 @@
     <string name="tele">电话</string>
     <string name="time">时间</string>
     <string name="mix">混合</string>
+    <string name="server_url">http://10.0.3.2:3000</string>
 </resources>

@@ -75,7 +75,7 @@ public class DateChoicesRecyclerViewAdapter extends RecyclerView.Adapter<DateCho
 
                 list = NumberGenerator.generateDateList();
                 if (choosenListener != null) {
-                    choosenListener.OnTimeChoiceChoosen(rightIndex, totalIndex, list.get(0));
+//                    choosenListener.OnTimeChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }
                 swapListIndex();
 

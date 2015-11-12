@@ -16,13 +16,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tiger.xiaohumo.frnumberwinner.adapters.ChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.DateChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.NumberChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.TelePhoneNumberRecycleViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.adapters.TimeChoicesRecyclerViewAdapter;
 import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
 import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
+import com.tiger.xiaohumo.frnumberwinner.objects.Record;
 import com.tiger.xiaohumo.frnumberwinner.util.NumberGenerator;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,6 +62,7 @@ public class NumberPlayFragment extends Fragment {
     private static Random random = new Random();
     private static int target;
 
+    private ChoicesRecyclerViewAdapter adapter;
     private NumberChoicesRecyclerViewAdapter numAdapter;
     private TelePhoneNumberRecycleViewAdapter teleAdapter;
     private TimeChoicesRecyclerViewAdapter timeAdapter;
@@ -67,8 +72,6 @@ public class NumberPlayFragment extends Fragment {
     Timer timer = new Timer();
     private int totalQuestions;
     private int totalRightAnswers;
-    private ConfigSingleItemObject modeObject;
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -97,38 +100,58 @@ public class NumberPlayFragment extends Fragment {
         btnStart.setVisibility(View.INVISIBLE);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TELEPHONE_NUMBER) {
-
-            ArrayList<ArrayList<String>> lists = NumberGenerator.generateTelePhoneArray();
-            speakTelePhoneNumber(lists.get(0));
-
-            teleAdapter = new TelePhoneNumberRecycleViewAdapter(getActivity(), lists);
-            teleAdapter.setChoosenListener(new OnChooseModeListener() {
-            });
-            recyclerView.setAdapter(teleAdapter);
-
-        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TIME) {
-
-            ArrayList<String> timeList = NumberGenerator.generateTimeList();
-            speakNumber(timeList.get(0));
-            timeAdapter = new TimeChoicesRecyclerViewAdapter(getActivity(), timeList);
-            timeAdapter.setChoosenListener(new OnChooseModeListener());
-            recyclerView.setAdapter(timeAdapter);
-
-        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.DATE) {
-            ArrayList<String> timeList = NumberGenerator.generateDateList();
-            speakNumber(timeList.get(0));
-            dateAdapter = new DateChoicesRecyclerViewAdapter(getActivity(), timeList);
-            dateAdapter.setChoosenListener(new OnChooseModeListener());
-            recyclerView.setAdapter(dateAdapter);
-        } else {
-            ArrayList<String> integers = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
-
-            speakNumber(integers.get(0));
-            numAdapter = new NumberChoicesRecyclerViewAdapter(getActivity(), integers, modeObject);
-            numAdapter.setChoosenListener(new OnChooseModeListener());
-            recyclerView.setAdapter(numAdapter);
+        ArrayList<String> list = null;
+        switch (FrWinnerApplication.currentType){
+            case TELEPHONE_NUMBER:
+                list = NumberGenerator.generateTelePhoneArray();
+                speakTelePhoneNumber(list.get(0));
+                break;
+            case TIME:
+                list = NumberGenerator.generateTimeList();
+                speakNumber(list.get(0));
+                break;
+            case DATE:
+                list = NumberGenerator.generateDateList();
+                speakNumber(list.get(0));
+                break;
+            case NUMBER:
+                list = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
+                speakNumber(list.get(0));
+                break;
         }
+        adapter = new ChoicesRecyclerViewAdapter(getActivity(), list);
+        adapter.setChoosenListener(new OnChooseModeListener());
+        recyclerView.setAdapter(adapter);
+
+//
+//        if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TELEPHONE_NUMBER) {
+//
+//            ArrayList<String> lists = NumberGenerator.generateTelePhoneArray();
+//            speakTelePhoneNumber(lists.get(0));
+//
+//
+//        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.TIME) {
+//
+//            ArrayList<String> timeList = NumberGenerator.generateTimeList();
+//            speakNumber(timeList.get(0));
+//            timeAdapter = new TimeChoicesRecyclerViewAdapter(getActivity(), timeList);
+//            timeAdapter.setChoosenListener(new OnChooseModeListener());
+//            recyclerView.setAdapter(timeAdapter);
+//
+//        } else if (FrWinnerApplication.currentType == FrWinnerApplication.PLAY_TYPE.DATE) {
+//            ArrayList<String> timeList = NumberGenerator.generateDateList();
+//            speakNumber(timeList.get(0));
+//            dateAdapter = new DateChoicesRecyclerViewAdapter(getActivity(), timeList);
+//            dateAdapter.setChoosenListener(new OnChooseModeListener());
+//            recyclerView.setAdapter(dateAdapter);
+//        } else {
+//            ArrayList<String> integers = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
+//
+//            speakNumber(integers.get(0));
+//            numAdapter = new NumberChoicesRecyclerViewAdapter(getActivity(), integers, modeObject);
+//            numAdapter.setChoosenListener(new OnChooseModeListener());
+//            recyclerView.setAdapter(numAdapter);
+//        }
 
         CountDownTask task = new CountDownTask(totalTime);
         timer.schedule(task, 1000, 1000);       // timeTask
@@ -139,17 +162,42 @@ public class NumberPlayFragment extends Fragment {
     }
 
 
-    private void speakTelePhoneNumber(ArrayList<String> teleNumber) {
+    private void speakTelePhoneNumber(String teleNumber) {
 
-        for (int i = 0; i < teleNumber.size(); i++) {
-            speakNumber(teleNumber.get(i));
+        for (int i = 0; i < teleNumber.length() / 2; i++) {
+            speakNumber(teleNumber.substring(i * 2, (i * 2 + 2)));
         }
     }
 
-    private void showResult() {
+    private void showResult() throws JSONException {
+
+        WorldRecordsLoadController recorder = new WorldRecordsLoadController(getActivity());
+        String currMode = null;
+        switch (FrWinnerApplication.currentType){
+            case NUMBER:
+                currMode = "number";
+                break;
+            case TELEPHONE_NUMBER:
+                currMode = "tele";
+                break;
+            case TIME:
+                currMode = "time";
+                break;
+            case DATE:
+                currMode = "date";
+                break;
+            case MIX:
+                currMode = "mix";
+                break;
+        }
+        recorder.GetMaxRecord(currMode);
+
+
 
         int wrong = totalQuestions - totalRightAnswers;
         int credit = totalRightAnswers - wrong;
+
+        recorder.uploadRecord("null", currMode, credit);
 
         String comment = "";
         if (credit > 12) {
@@ -205,7 +253,11 @@ public class NumberPlayFragment extends Fragment {
                     if (totalSeconds < 0) {
                         timer.cancel();
                         Toast.makeText(getActivity(), "Game Over", Toast.LENGTH_SHORT).show();
-                        showResult();
+                        try {
+                            showResult();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
@@ -215,35 +267,26 @@ public class NumberPlayFragment extends Fragment {
     private class OnChooseModeListener implements ChoiceChoosenListener{
 
         @Override
-        public void OnNumberChoiceChoosen(int rightIndex, int total, String target) {
-        questionNumber.setText(rightIndex + "/" + (total));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = total;
-        speakNumber(target);
-        }
+        public void OnChoiceChoosen(int rightIndex, int totalIndex, String number) {
+            questionNumber.setText(rightIndex + "/" + (totalIndex));
+            questionIndex = index;
+            totalRightAnswers = rightIndex;
+            totalQuestions = totalIndex;
+            MainActivity.myTTS.stop();
 
-        @Override
-        public void OnTelephoneChoosen(int rightIndex, int totalIndex, ArrayList<String> teleNumber) {
-        questionNumber.setText(rightIndex + "/" + (totalIndex));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = totalIndex;
-        MainActivity.myTTS.stop();
-        speakTelePhoneNumber(teleNumber);
-        }
-
-        @Override
-        public void OnTimeChoiceChoosen(int rightIndex, int totalIndex, String teleNumber) {
-        questionNumber.setText(rightIndex + "/" + (totalIndex));
-        questionIndex = index;
-        totalRightAnswers = rightIndex;
-        totalQuestions = totalIndex;
-        MainActivity.myTTS.stop();
-        speakNumber(teleNumber);
+            switch (FrWinnerApplication.currentType){
+                case NUMBER:
+                case TIME:
+                case DATE:
+                    speakNumber(number);
+                    break;
+                case TELEPHONE_NUMBER:
+                    speakTelePhoneNumber(number);
+                    break;
+                default:break;
+            }
         }
     }
-
 }
 
 

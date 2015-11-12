@@ -75,7 +75,7 @@ public class TimeChoicesRecyclerViewAdapter extends RecyclerView.Adapter<TimeCho
 
                 list = NumberGenerator.generateTimeList();
                 if (choosenListener != null) {
-                    choosenListener.OnTimeChoiceChoosen(rightIndex, totalIndex, list.get(0));
+//                    choosenListener.OnTimeChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }
                 swapListIndex();
 

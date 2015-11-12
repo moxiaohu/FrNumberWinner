@@ -13,13 +13,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
-
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, TextToSpeech.OnInitListener {
+
+    public static String SERVER_URL;
 
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private int MY_DATA_CHECK_CODE = 0;
@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SERVER_URL = getResources().getString(R.string.server_url);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         startActivityForResult(checkTTSIntent, MY_DATA_CHECK_CODE);
+
+
+
     }
 
     @Override

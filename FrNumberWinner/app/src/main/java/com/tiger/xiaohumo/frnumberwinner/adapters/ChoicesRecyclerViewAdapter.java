@@ -10,8 +10,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tiger.xiaohumo.frnumberwinner.FrWinnerApplication;
 import com.tiger.xiaohumo.frnumberwinner.R;
 import com.tiger.xiaohumo.frnumberwinner.interfaces.ChoiceChoosenListener;
+import com.tiger.xiaohumo.frnumberwinner.objects.ConfigSingleItemObject;
 import com.tiger.xiaohumo.frnumberwinner.util.NumberGenerator;
 
 import java.util.ArrayList;
@@ -20,22 +22,24 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by xiaohumo on 29/10/15.
+ * Created by xiaohumo on 15/7/11.
  */
-public class TelePhoneNumberRecycleViewAdapter extends RecyclerView.Adapter<TelePhoneNumberRecycleViewAdapter.NormalTextViewHolder> {
+public class ChoicesRecyclerViewAdapter extends RecyclerView.Adapter<ChoicesRecyclerViewAdapter.NormalTextViewHolder> {
     private final LayoutInflater mLayoutInflater;
     private ArrayList<String> list;
     private Context context;
-    private int swapIndex;
     private int rightIndex = 0;
     private int totalIndex = 0;
-
     private ChoiceChoosenListener choosenListener;
+    private int swapIndex;
 
-    public TelePhoneNumberRecycleViewAdapter(Context context, ArrayList<String> list) {
+    public ChoicesRecyclerViewAdapter(Context context, ArrayList<String> list) {
         mLayoutInflater = LayoutInflater.from(context);
         this.context = context;
         this.list = list;
+
+        // swap list(0) with random value list(swapIndex)
+        swapListIndex();
     }
 
     @Override
@@ -49,13 +53,11 @@ public class TelePhoneNumberRecycleViewAdapter extends RecyclerView.Adapter<Tele
 
     @Override
     public void onBindViewHolder(final NormalTextViewHolder holder, final int position) {
-
-        String item = list.get(position);
-
-        holder.item.setText(item);
+        holder.item.setText(list.get(position));
         holder.choiceLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
+
                 final Toast toast;
                 if (list.get(position).equals(list.get(swapIndex))) {
                     toast = Toast.makeText(context, "恭喜! 答对了", Toast.LENGTH_SHORT);
@@ -63,6 +65,7 @@ public class TelePhoneNumberRecycleViewAdapter extends RecyclerView.Adapter<Tele
                 } else {
                     toast = Toast.makeText(context, " 你答错啦，哈哈哈。。。", Toast.LENGTH_SHORT);
                 }
+
                 toast.show();
 
                 Handler handler = new Handler();
@@ -75,9 +78,22 @@ public class TelePhoneNumberRecycleViewAdapter extends RecyclerView.Adapter<Tele
 
                 totalIndex++;
 
-                list = NumberGenerator.generateTelePhoneArray();
+                switch (FrWinnerApplication.currentType){
+                    case TELEPHONE_NUMBER:
+                        list = NumberGenerator.generateTelePhoneArray();
+                        break;
+                    case TIME:
+                        list = NumberGenerator.generateTimeList();
+                        break;
+                    case DATE:
+                        list = NumberGenerator.generateDateList();
+                        break;
+                    case NUMBER:
+                        list = NumberGenerator.generateNumberArray(FrWinnerApplication.number_mode_min, FrWinnerApplication.number_mode_max);
+                        break;
+                }
                 if (choosenListener != null) {
-//                    choosenListener.OnTelephoneChoosen(rightIndex, totalIndex, list.get(0));
+                    choosenListener.OnChoiceChoosen(rightIndex, totalIndex, list.get(0));
                 }
                 swapListIndex();
 

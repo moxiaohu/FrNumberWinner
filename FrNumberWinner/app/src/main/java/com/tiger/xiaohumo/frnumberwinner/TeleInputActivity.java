@@ -48,7 +48,7 @@ public class TeleInputActivity extends Activity implements TextToSpeech.OnInitLi
 
     private void generateTeleNumber() {
         String head = headset[NumberGenerator.randInt(0, headset.length - 1)];
-        currNumber = NumberGenerator.generateOneTelePhoneNumber(head);
+//        currNumber = NumberGenerator.generateOneTelePhoneNumber(head);
     }
 
     @OnClick(R.id.listen_tele_number)

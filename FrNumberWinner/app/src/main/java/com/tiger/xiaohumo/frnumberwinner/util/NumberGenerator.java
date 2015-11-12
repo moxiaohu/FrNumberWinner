@@ -70,15 +70,15 @@ public class NumberGenerator {
         return integers;
     }
 
-    public static ArrayList<ArrayList<String>> generateTelePhoneArray() {
-        ArrayList<ArrayList<String>> numberLists = new ArrayList<>();
+    public static ArrayList<String> generateTelePhoneArray() {
+        ArrayList<String> numberLists = new ArrayList<>();
 
         String[] headset = new String[]{"06", "07", "08", "01"};
         String head = headset[randInt(0, headset.length - 1)];
 
-        ArrayList<String> target = generateOneTelePhoneNumber(head);
+        String target = generateOneTelePhoneNumber(head);
 
-        HashSet<ArrayList<String>> set = new HashSet<>();
+        HashSet<String> set = new HashSet<>();
         set.add(target);
 
         while (set.size() != 5) {
@@ -86,40 +86,36 @@ public class NumberGenerator {
         }
 
         set.remove(target);
-        numberLists = new ArrayList<ArrayList<String>>(set);
+        numberLists = new ArrayList<>(set);
         numberLists.add(0, target);
 
         return numberLists;
     }
 
-    public static ArrayList<String> generateOneTelePhoneNumber(String head) {
+    public static String generateOneTelePhoneNumber(String head) {
 
-        ArrayList<String> numbers = new ArrayList<>();
-        numbers.add(head);
-        while (numbers.size() != 5) {
+        String tele = "";
+        tele+= head;
+        while (tele.length() != 10) {
             int num = NumberGenerator.randInt(0, 99);
             if (num >= 0 && num < 10) {
-                numbers.add("0" + num);
+                tele+= ("0" + num);
             } else {
-                numbers.add(num + "");
+                tele+= (num + "");
             }
         }
-        return numbers;
+        return tele;
     }
 
-    private static ArrayList<String> generateOneBadTelePhoneNumber(ArrayList<String> target) {
+    private static String generateOneBadTelePhoneNumber(String target) {
 
-        ArrayList<String> badTarget = (ArrayList<String>) target.clone();
-        int changePosition = randInt(1, 4);
+        String badTarget = target;
+        StringBuilder builder = new StringBuilder(badTarget);
+        int changePosition = randInt(2, 8);
 
-        while (badTarget.get(changePosition).equals(target.get(changePosition))) {
-            int changeValue = NumberGenerator.randInt(0, 99);
+        while (badTarget.equals(target)) {
 
-            if (changeValue >= 0 && changeValue < 10) {
-                badTarget.set(changePosition, "0" + changeValue);
-            } else {
-                badTarget.set(changePosition, changeValue + "");
-            }
+            badTarget = badTarget.substring(0, changePosition - 1) + String.valueOf(randInt(0, 9)) + badTarget.substring(changePosition, badTarget.length());
         }
         return badTarget;
     }
